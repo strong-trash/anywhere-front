@@ -3,4 +3,16 @@ module.exports = defineConfig({
   publicPath: "/anywhere-front",
   outputDir: "dist",
   transpileDependencies: true,
+  // chainWebpack: (config) => {
+  //   config.resolve.alias.set("@", path.resolve(__dirname, "src/"));
+  // },
+  css: {
+    loaderOptions: {
+      scss: {
+        additionalData: `
+          @import "@/assets/variables.scss";
+        `,
+      },
+    },
+  },
 });
