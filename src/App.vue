@@ -1,36 +1,34 @@
 <template>
   <div id="app" class="anywhere">
-    <img :src="imgpath" width="128px" />
-    <p class="anywhere">{{ anywhere }}</p>
+    <app-header></app-header>
+    <router-view></router-view>
+    <app-footer></app-footer>
   </div>
 </template>
 
 <script>
-import hikerImg from "./assets/icon_hiker_black.png";
+import AppHeader from "./components/AppHeader.vue";
+import AppFooter from "./components/AppFooter.vue";
+
 export default {
   data: function () {
     return {
-      imgpath: hikerImg,
-      anywhere: "어디로든",
+      //
     };
+  },
+  components: {
+    "app-header": AppHeader,
+    "app-footer": AppFooter,
   },
 };
 </script>
 
-<style>
+<style lang="scss">
 #app {
   width: 100vw;
   height: 100vh;
 
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
-}
-
-.anywhere {
-  font-family: "Gowun Batang", serif;
-  font-size: 48px;
-  font-weight: lighter;
 }
 </style>
