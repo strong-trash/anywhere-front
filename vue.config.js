@@ -1,6 +1,6 @@
 const { defineConfig } = require("@vue/cli-service");
 module.exports = defineConfig({
-  publicPath: "/anywhere-front",
+  publicPath: "/",
   outputDir: "dist",
   transpileDependencies: true,
   // chainWebpack: (config) => {
