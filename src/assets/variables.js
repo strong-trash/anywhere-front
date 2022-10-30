@@ -50,6 +50,15 @@ const drawingOptions = {
     fillColor: "#845ec2", // 채우기 색깔입니다
     fillOpacity: 0.2, // 채우기 불투명도입니다
   },
+  savedCircleWithoutFill: {
+    // 클릭 또는 터치로 저장한 반경
+    strokeWeight: 3, // 선의 두께입니다
+    strokeColor: "#845ec2", // 선의 색깔입니다
+    strokeOpacity: 0.9, // 선의 불투명도입니다 0에서 1 사이값이며 0에 가까울수록 투명합니다
+    strokeStyle: "solid", // 선의 스타일입니다
+    fillColor: "#845ec2", // 채우기 색깔입니다
+    fillOpacity: 0, // 채우기 불투명도입니다
+  },
   overlay: {
     xAnchor: 0,
     yAnchor: 0,

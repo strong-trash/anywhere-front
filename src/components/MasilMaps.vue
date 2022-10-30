@@ -74,7 +74,7 @@ const markers = {
   userSelectedPoint: null,
 
   suggestedPlace: null,
-  suggestedPlaceOverlay: null, // 사suggestedPlace마커에 대해 장소 이름 표시.
+  suggestedPlaceOverlay: null, // suggestedPlace마커에 대해 장소 이름 표시.
 };
 
 const ACTION = {
@@ -362,6 +362,13 @@ export default {
       MasilPage.vue (부모)에서 내려준 suggestion정보를 지도에 마커로 표시
       */
       const vm = this;
+
+      // 기준점 선택시 생성한 거리표시 오버레이 삭제
+      // 기준점 선택이 생성한 원의 채우기 색 없애기 (외곽선만 남김)
+      const { circle, overlay } = drawing;
+      overlay.setMap(null);
+      drawing.overlay = null;
+      circle.setOptions(drawingOptions.savedCircleWithoutFill);
 
       // 추천장소가 이미 상태에 존재하면 삭제
       markers.suggestedPlace && markers.suggestedPlace.setMap(null);
