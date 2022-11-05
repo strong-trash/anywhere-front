@@ -1,8 +1,3 @@
-// API URL
-const apiRequestURL = {
-  placeByUserinput: "https://something.com/masil",
-};
-
 // MasilPage.vue - select의 옵션
 const bigFilterOpts = [
   { name: "어디로든", code: "ANY" },
@@ -70,5 +65,4 @@ module.exports = {
   bigFilterOpts,
   smallFilterOpts,
   drawingOptions,
-  apiRequestURL,
 };

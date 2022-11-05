@@ -1,7 +1,24 @@
 <template>
   <div id="masil-maps">
     <div id="map"></div>
+
     <div id="floatmenu-container">
+      <div class="btns" style="display: flex">
+        <rounded-btn :imgsrc="img.marker" :handler="startSelectingPoint" :btntext="'위치 선택'" />
+        <rounded-btn
+          :imgsrc="img.area"
+          :handler="startSelectingDistance"
+          :btntext="'거리 선택'"
+          :disabled="!userSelectedPointCoord"
+        />
+        <rounded-btn
+          id="submit-plan-btn"
+          :imgsrc="img.airplane"
+          :handler="requestPlace"
+          :disabled="!userSelectedDistance || !userSelectedSmallFilter"
+        />
+      </div>
+
       <div>
         <div class="select-boxes">
           <v-select
@@ -30,29 +47,6 @@
           v-show="userSelectedSmallFilter === `직접입력`"
         />
       </div>
-
-      <div class="btns" style="display: flex">
-        <button class="rounded-btn" @mousedown="startSelectingPoint" type="button">
-          <img :src="img.marker" alt="select departure point" />
-          위치 선택
-        </button>
-        <button
-          class="rounded-btn"
-          @mousedown="startSelectingDistance"
-          :disabled="!userSelectedPointCoord"
-        >
-          <img :src="img.area" alt="set radius" style="width: 28px; height: 28px" />
-          거리 선택
-        </button>
-        <button
-          id="submit-plan-btn"
-          class="rounded-btn"
-          :disabled="!userSelectedDistance || !userSelectedSmallFilter"
-          @mousedown="requestPlace"
-        >
-          <img :src="img.airplane" alt="submit user plan, request place to server" />
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -64,6 +58,8 @@ import markerImg from "@/assets/marker.png";
 import airplaneImg from "@/assets/airplane_white.png";
 import areaImg from "@/assets/area.png";
 import { bigFilterOpts, smallFilterOpts, drawingOptions } from "@/assets/variables.js";
+
+import RoundedBtn from "./RoundedBtn.vue";
 
 const drawing = {
   line: null, // 거리를 선으로 표시
@@ -88,10 +84,19 @@ const MARKER_TYPE = {
 };
 
 export default {
+  components: {
+    "rounded-btn": RoundedBtn,
+  },
   props: ["suggestion"], // suggestion = { x:number, y:number, place_name:string }
   watch: {
     suggestion: function () {
       this.showSuggestedPlace();
+    },
+    currentAction: function () {
+      if (this.currentAction != ACTION.NONE) {
+        this.removeSuggestedPlace();
+        this.$emit("mapsActionChange"); // currentAction이 ACTION.POINT 또는 ACTION.DISTANCE가 되었을 때
+      }
     },
   },
   data: function () {
@@ -157,6 +162,9 @@ export default {
     },
     hideMessageCard: function () {
       this.$emit("hideMsgCard");
+    },
+    handleFloatmenuClick: function () {
+      this.$emit("floatmenuIsClicked");
     },
     // --------------------------------------------------------------------------
     startSelectingPoint: function () {
@@ -322,8 +330,8 @@ export default {
           }
         });
 
-      window.kakao.maps.event.removeListener(vm.map, "mousemove", vm.drawPickingCircle); // 거리 재기
-      window.kakao.maps.event.removeListener(vm.map, "click", vm.drawSavedCircle); // 거리 저장
+      window.kakao.maps.event.removeListener(vm.map, "mousemove", vm.previewDistance); // 거리 재기
+      window.kakao.maps.event.removeListener(vm.map, "click", vm.selectDistance); // 거리 저장
       vm.hideMessageCard();
       vm.unsetCurrentAction();
     },
@@ -340,8 +348,8 @@ export default {
     buildReqBody: function () {
       const vm = this;
       const params = {
-        x: vm.userSelectedPointCoord.getLat(), // 경도
-        y: vm.userSelectedPointCoord.getLng(), // 위도
+        x: vm.userSelectedPointCoord.getLng(), // 경도
+        y: vm.userSelectedPointCoord.getLat(), // 위도
         dis: vm.userSelectedDistance,
         bigfilter: vm.userSelectedBigFilter.code,
         smallfilter: null,
@@ -354,7 +362,7 @@ export default {
         else params.smallfilter = vm.userSelectedSmallFilter;
       }
 
-      return JSON.stringify(params);
+      return params;
     },
     // --------------------------------------------------------------------------
     showSuggestedPlace: function () {
@@ -366,9 +374,13 @@ export default {
       // 기준점 선택시 생성한 거리표시 오버레이 삭제
       // 기준점 선택이 생성한 원의 채우기 색 없애기 (외곽선만 남김)
       const { circle, overlay } = drawing;
-      overlay.setMap(null);
-      drawing.overlay = null;
-      circle.setOptions(drawingOptions.savedCircleWithoutFill);
+      if (overlay) {
+        overlay.setMap(null);
+        drawing.overlay = null;
+      }
+      if (circle) {
+        circle.setOptions(drawingOptions.savedCircleWithoutFill);
+      }
 
       // 추천장소가 이미 상태에 존재하면 삭제
       markers.suggestedPlace && markers.suggestedPlace.setMap(null);
@@ -377,7 +389,7 @@ export default {
       markers.suggestedPlaceOverlay = null;
 
       const { x, y, place_name } = vm.suggestion;
-      const latlng = new window.kakao.maps.LatLng(x, y);
+      const latlng = new window.kakao.maps.LatLng(y, x);
 
       // 마커 표시
       markers.suggestedPlace = addNewMarker({
@@ -399,6 +411,17 @@ export default {
 
       // 지도 중심 마커로 이동
       vm.map.panTo(latlng);
+    },
+    removeSuggestedPlace: function () {
+      const { suggestedPlace, suggestedPlaceOverlay } = markers;
+      if (suggestedPlace) {
+        suggestedPlace.setMap(null);
+        markers.suggestedPlace = null;
+      }
+      if (suggestedPlaceOverlay) {
+        suggestedPlaceOverlay.setMap(null);
+        markers.suggestedPlaceOverlay = null;
+      }
     },
   },
 };
@@ -456,16 +479,16 @@ function addNewMarker({ map, latlng, markerType }) {
   #map {
     width: 100%;
     height: 100%;
+    z-index: 0;
   }
 
   #floatmenu-container {
     position: fixed;
     top: $header-height;
     left: 0px;
-    z-index: 998;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     padding: 8px;
     margin: 16px;
     background-color: rgba(255, 255, 255, 0.7);
@@ -475,7 +498,6 @@ function addNewMarker({ map, latlng, markerType }) {
       display: flex;
     }
     .v-select {
-      z-index: 998;
       margin-right: 8px;
       min-width: 140px;
       --vs-dropdown-min-width: 140px;
@@ -506,7 +528,7 @@ function addNewMarker({ map, latlng, markerType }) {
       margin-top: 8px;
 
       border-radius: 16px;
-      border: 1px solid rgba(60, 60, 60, 0.26);
+      border: 1px solid lightgrey;
       font-size: 14px;
       transition: all 0.2s;
     }
@@ -517,39 +539,6 @@ function addNewMarker({ map, latlng, markerType }) {
     .free-response:hover {
       transform: scale(1.05);
     }
-  }
-
-  .rounded-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    // width: 36px;
-    height: 36px;
-    margin-right: 8px;
-    margin-top: 8px;
-
-    background-color: white;
-    // border-radius: 50%;
-    border-radius: 16px;
-    border: 1px solid rgba(60, 60, 60, 0.26);
-    cursor: pointer;
-    transition: all 0.2s;
-    img {
-      width: 22px;
-      height: 22px;
-      filter: opacity(0.8);
-    }
-  }
-  .rounded-btn:hover {
-    transform: scale(1.1);
-  }
-  .rounded-btn:active {
-    transform: scale(0.9);
-  }
-  .rounded-btn:disabled {
-    cursor: not-allowed;
-    filter: brightness(70%);
   }
 
   #submit-plan-btn {
