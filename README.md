@@ -10,18 +10,55 @@
 
 ---
 
-## 바로가기
+### 바로가기
 
 - **[⭐어디로든](https://anywhere.strongtrash.com/)**
 - [백엔드 리포지토리](https://github.com/strong-trash/anywhere_Back)
 - [기획서](https://docs.google.com/presentation/d/1YVny5AJlEWHYZOPUOggZy8Q0IGwG9XWhj-9N8zqvGsY/edit?usp=sharing)
 
-## 참여
+### 참여
 
 - 장현규 : 기획, 백엔드 프로그래밍
 - 이원진 : 기획, 프론트엔드 프로그래밍
 
-## 직접 사용 요소
+# 프로그램 구조
+
+### 전체 폴더 구조
+
+```
+[src]
+└─ main.js : App.vue와 router.js를 불러와 전체 웹페이지를 구성합니다. 모든 프로그램의 출발점입니다.
+└─ App.vue : 최상위 컴포넌트입니다.
+└─ router.js : 라우터를 위한 설정내용이 기술되어있습니다.
+│
+└─ [assets] : 이미지, 상수(js, scss)를 가지는 폴더입니다.
+└─ [pages] : 페이지(라우트)에 해당하는 컴포넌트들을 가지는 폴더입니다. 이 컴포넌트들이 App.vue에 직접 연결되고, 이 컴포넌트들이 components폴더 안의 컴포넌트들을 자식으로 가집니다.
+└─ [components] : 페이지(라우트)가 아닌 컴포넌트들을 가지는 폴더입니다.
+```
+
+### 전체 컴포넌트 구조
+
+```
+App : 최상위 컴포넌트
+└─ AppHeader
+└─ << ROUTER VIEW >>
+    └─ LandingPage : 웹서비스의 메인페이지입니다.
+    └─ MasilPage : 장소를 검색할 수 있는 핵심기능 페이지입니다.
+    └─ ReviewPage : 모든 장소의 후기(article)를 모아볼 수 있는 페이지입니다.
+    └─ TimelinePage : 장소가 검색된 모든 내역을 모아볼 수 있는 페이지입니다.
+    └─ ErrorPage : 잘못된 접근이나 오류가 발생한 경우 보이는 페이지입니다.
+└─ AppFooter
+
+MasilPage
+└─ MasilMaps
+    └─ RoundedButton
+└─ MessageCard
+└─ BottomDialog
+    └─ (slot) PlaceDetail
+
+```
+
+# 도움 받은 곳
 
 ### 코드
 
